@@ -58,38 +58,11 @@ jobs:
             workflow_dispatch
             schedule
             
-  build-titanoboa:
-    needs: ["build-base"]
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [amd64, arm64]
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Login to GHCR
-        if: contains(fromJson('["workflow_dispatch", "merge_group", "schedule"]'), github.event_name)
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Image name
-        id: name
+      - name: change base image
         run: |
-          echo "FQ_NAME=${FQ_NAME,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
-        with:
-          driver: docker-container
+          grep -v '^\s*//' ./src/titanoboa/.devcontainer/devcontainer.json | \
+          jq --arg img "$FQ_NAME:base-${{ github.sha }}-${{ matrix.arch }}" '.image = $img' > tmp.json \
+          && mv tmp.json ./src/titanoboa/.devcontainer/devcontainer.json
 
       - name: Build Titanoboa Dev Container
         id: build-titanoboa
