@@ -51,12 +51,15 @@ jobs:
           imageName: ${{ steps.name.outputs.FQ_NAME }}
           imageTag: base-${{ github.sha }}-${{ matrix.arch }}
           platform: linux/${{ matrix.arch }}
-          refFilterForPush: |
-            refs/heads/main
-          eventFilterForPush: |
-            merge_group
-            workflow_dispatch
-            schedule
+          push: always
+
+      - name: Change base image in titanoboa devcontainer.json
+        run: |
+          echo "Verifying image is available to Docker:"
+          docker images     
+          grep -v '^\s*//' ./src/titanoboa/.devcontainer/devcontainer.json | \
+          jq --arg img "${{ steps.name.outputs.FQ_NAME }}:base-${{ github.sha }}-${{ matrix.arch }}" '.image = $img' > tmp.json \
+          && mv tmp.json ./src/titanoboa/.devcontainer/devcontainer.json
      
       - name: Build Titanoboa Dev Container
         id: build-titanoboa
