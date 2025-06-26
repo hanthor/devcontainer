@@ -57,6 +57,10 @@ jobs:
             merge_group
             workflow_dispatch
             schedule
+     
+      - name: Load base image into local Docker daemon
+        if: github.event_name == 'pull_request'
+        run: docker load < /tmp/ output.tar
             
       - name: change base image
         run: |
