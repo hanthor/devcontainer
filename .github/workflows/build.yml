@@ -60,6 +60,7 @@ jobs:
             
       - name: change base image
         run: |
+          docker images
           grep -v '^\s*//' ./src/titanoboa/.devcontainer/devcontainer.json | \
           jq --arg img "$FQ_NAME:base-${{ github.sha }}-${{ matrix.arch }}" '.image = $img' > tmp.json \
           && mv tmp.json ./src/titanoboa/.devcontainer/devcontainer.json
