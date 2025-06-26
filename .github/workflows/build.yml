@@ -58,34 +58,6 @@ jobs:
             workflow_dispatch
             schedule
      
-      - name: Find and Load Base Image into Docker
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "Searching for the output tarball in /tmp..."
-          # Find the first .tar file in /tmp and ignore permission errors
-          TAR_PATH=$(find /tmp -name "*.tar" 2>/dev/null -print -quit)
-          
-          if [[ -z "$TAR_PATH" ]]; then
-            echo "::error::Could not find the output tarball from the build step."
-            exit 1
-          fi
-          
-          echo "Found image artifact at: $TAR_PATH"
-          echo "File details:"
-          ls -lh $TAR_PATH
-          
-          echo "Loading image into Docker daemon..."
-          docker load < $TAR_PATH
-          echo "Image loaded successfully."
-
-      - name: Change base image in titanoboa devcontainer.json
-        run: |
-          echo "Verifying image is available to Docker:"
-          docker images     
-          grep -v '^\s*//' ./src/titanoboa/.devcontainer/devcontainer.json | \
-          jq --arg img "${{ steps.name.outputs.FQ_NAME }}:base-${{ github.sha }}-${{ matrix.arch }}" '.image = $img' > tmp.json \
-          && mv tmp.json ./src/titanoboa/.devcontainer/devcontainer.json
-    
       - name: Build Titanoboa Dev Container
         id: build-titanoboa
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
@@ -100,7 +72,6 @@ jobs:
             merge_group
             workflow_dispatch
             schedule
-
 
   sign:
     if: contains(fromJson('["workflow_dispatch", "merge_group", "schedule"]'), github.event_name)
