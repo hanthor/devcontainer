@@ -39,7 +39,7 @@ jobs:
           echo "FQ_NAME=${FQ_NAME,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
         with:
           driver: docker-container
 
@@ -51,49 +51,19 @@ jobs:
           imageName: ${{ steps.name.outputs.FQ_NAME }}
           imageTag: base-${{ github.sha }}-${{ matrix.arch }}
           platform: linux/${{ matrix.arch }}
-          refFilterForPush: |
-            refs/heads/main
-          eventFilterForPush: |
-            merge_group
-            workflow_dispatch
-            schedule
-            
-  build-titanoboa:
-    needs: ["build-base"]
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [amd64, arm64]
-    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+          push: always
 
-      - name: Login to GHCR
-        if: contains(fromJson('["workflow_dispatch", "merge_group", "schedule"]'), github.event_name)
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Image name
-        id: name
+      - name: Change base image in titanoboa devcontainer.json
         run: |
-          echo "FQ_NAME=${FQ_NAME,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-
+          echo "Verifying image is available to Docker:"
+          docker images     
+          grep -v '^\s*//' ./src/titanoboa/.devcontainer/devcontainer.json | \
+          jq --arg img "${{ steps.name.outputs.FQ_NAME }}:base-${{ github.sha }}-${{ matrix.arch }}" '.image = $img' > tmp.json \
+          && mv tmp.json ./src/titanoboa/.devcontainer/devcontainer.json
+     
       - name: Build Titanoboa Dev Container
         id: build-titanoboa
-        uses: devcontainers/ci@v0.3
+        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
         with:
           subFolder: ./src/titanoboa
           imageName: ${{ steps.name.outputs.FQ_NAME }}
@@ -105,7 +75,6 @@ jobs:
             merge_group
             workflow_dispatch
             schedule
-
 
   sign:
     if: contains(fromJson('["workflow_dispatch", "merge_group", "schedule"]'), github.event_name)
@@ -129,18 +98,18 @@ jobs:
           echo "FQ_NAME=${FQ_NAME,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Sign Images
+      - name: Sign Dev Containers
         run: |
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${{ steps.name.outputs.FQ_NAME }}:base-${{ github.sha }}-${{ matrix.arch }}
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${{ steps.name.outputs.FQ_NAME }}:titanoboa-${{ github.sha }}-${{ matrix.arch }} || true
         env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
 
   manifest:
     if: github.event_name != 'pull_request'
@@ -151,7 +120,7 @@ jobs:
       packages: write
     steps:
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
