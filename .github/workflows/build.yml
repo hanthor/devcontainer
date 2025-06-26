@@ -62,8 +62,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "Searching for the output tarball in /tmp..."
-          # Find the first .tar file in /tmp, which will be our image
-          TAR_PATH=$(find /tmp -name "*.tar" -print -quit)
+          # Find the first .tar file in /tmp and ignore permission errors
+          TAR_PATH=$(find /tmp -name "*.tar" 2>/dev/null -print -quit)
           
           if [[ -z "$TAR_PATH" ]]; then
             echo "::error::Could not find the output tarball from the build step."
