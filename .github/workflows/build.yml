@@ -37,7 +37,7 @@ jobs:
         with:
           subfolder: ./src/base
           imageName: ${{ steps.name.outputs.FQ_NAME }}
-          imageTag: latest,${{ github.sha }}
+          imageTag: flightctl,${{ github.sha }}
           refFilterForPush: |
             refs/heads/main
           eventFilterForPush: |
