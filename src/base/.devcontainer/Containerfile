@@ -2,7 +2,8 @@ FROM quay.io/fedora/fedora-bootc:latest@sha256:13fd5a5efb37d9d95fed443d66e1d7e32
 
 FROM quay.io/fedora/fedora:latest@sha256:2dbff2069a45080720c8ea04862ca0c7f3fd202c090baf7372755a424ef1449c
 
-ENV USERNAME="ublue"
+ENV USERNAME="flightctl"
+
 
 COPY --from=bootc --chmod=0755 /usr/libexec/bootc-base-imagectl /usr/libexec/bootc-base-imagectl
 COPY --from=bootc /usr/share/doc/bootc-base-imagectl /usr/share/doc/
@@ -64,4 +65,6 @@ RUNEOF
 
 LABEL \
     "name"="devcontainer" \
-    "org.opencontainers.image.name"="devcontainer" \
+    "org.opencontainers.image.name"="devcontainer"
+
+ENTRYPOINT ["/sbin/init"]
