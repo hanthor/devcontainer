@@ -1,14 +1,15 @@
 // For format details, see https://aka.ms/devcontainer.json.
 {
     "$schema": "https://raw.githubusercontent.com/devcontainers/spec/refs/heads/main/schemas/devContainer.schema.json",
-    "name": "ublue-devcontainer",
+    "name": "flightctl-devcontainer",
     "build": {
         "dockerfile": "Containerfile",
         "context": "."
     },
     "features": {
+        "ghcr.io/devcontainers-extra/features/kind:1": {},
         "ghcr.io/devcontainers/features/common-utils:2": {
-            "username": "ublue",
+            "username": "flightctl",
             "installZsh": false,
             "installOhMyZsh": false,
             "installOhMyZshConfig": false
@@ -31,6 +32,6 @@
         "--name",
         "devcontainer-${containerWorkspaceFolderBasename}"
     ],
-    "remoteUser": "ublue",
-    "containerUser": "ublue"
+    "remoteUser": "flightctl",
+    "containerUser": "flightctl"
 }

@@ -12,7 +12,6 @@ RUN --mount=type=tmpfs,dst=/var \
     bash <<'RUNEOF'
 set -eoux pipefail
 dnf5 config-manager setopt install_weak_deps=False
-dnf5 copr -y enable ublue-os/packages
 
 dnf5 install -y \
     ShellCheck \
@@ -28,8 +27,11 @@ dnf5 install -y \
     shfmt \
     socat \
     tmux \
-    ublue-os-signing \
     yq \
+    make \
+    golang \
+    git \
+    jq \
     zstd
 
 # syft
@@ -57,15 +59,9 @@ macadam completion bash >/etc/bash_completion.d/macadam.sh
 chmod +x /usr/libexec/bootc-base-imagectl
 
 # Cleanup
-dnf5 copr -y disable ublue-os/packages
 dnf5 clean all
 RUNEOF
 
 LABEL \
     "name"="devcontainer" \
     "org.opencontainers.image.name"="devcontainer" \
-    "org.opencontainers.image.url"="https://github.com/ublue-os/devcontainer" \
-    "org.opencontainers.image.vendor"="Universal Blue" \
-    "org.opencontainers.image.version"="base" \
-    "vendor"="Universal Blue" \
-    "version"="base"
